@@ -1,0 +1,5 @@
+model: vit_base_patch16_224
+batch_size: 32
+epochs: 100
+lr: 0.000001
+val_split: 0.2

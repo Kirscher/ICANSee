@@ -1,0 +1,10 @@
+model: resnet50
+batch_size: 128
+epochs: 50
+lr: 1e-4
+val_split: 0.2
+num_workers: 4
+sampling: oversample
+use_wandb: True
+wandb_project: RARE-Challenge
+loss: focal_loss

@@ -1,0 +1,5 @@
+model: convnextv2_tiny.fcmae_ft_in22k_in1k
+batch_size: 32
+epochs: 100
+lr: 0.000001
+val_split: 0.2

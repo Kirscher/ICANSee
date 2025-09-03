@@ -1,0 +1,6 @@
+model: resnet50
+batch_size: 32
+epochs: 100
+lr: 0.001
+val_split: 0.2
+sampling: undersample

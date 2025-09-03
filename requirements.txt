@@ -1,0 +1,11 @@
+torch>=2.1
+torchvision
+timm
+numpy
+pillow
+wandb
+scikit-learn
+tqdm
+pyyaml
+pandas
+hydra-core
