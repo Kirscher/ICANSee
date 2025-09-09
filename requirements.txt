@@ -8,4 +8,4 @@ scikit-learn
 tqdm
 pyyaml
 pandas
-hydra-core
+pytest

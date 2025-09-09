@@ -16,30 +16,46 @@ from metrics import compute_metrics
 def get_tta_transforms():
     """Get test-time augmentation transforms."""
     return [
-        transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]),
-        transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(p=1.0),  # Always flip
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]),
-        transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ColorJitter(brightness=0.1, contrast=0.1),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]),
-        transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(p=1.0),
-            transforms.ColorJitter(brightness=0.1, contrast=0.1),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        ),
+        transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.RandomHorizontalFlip(p=1.0),  # Always flip
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        ),
+        transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ColorJitter(brightness=0.1, contrast=0.1),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        ),
+        transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.RandomHorizontalFlip(p=1.0),
+                transforms.ColorJitter(brightness=0.1, contrast=0.1),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        ),
     ]
 
 
@@ -63,7 +79,7 @@ def evaluate_and_save(model, dataloader, device, output_csv, use_tta=False):
                     with torch.no_grad():
                         output = model(transformed_images)
                         tta_outputs.append(torch.sigmoid(output))
-                
+
                 # Average predictions
                 outputs = torch.stack(tta_outputs).mean(dim=0).cpu().numpy()
             else:
@@ -74,7 +90,9 @@ def evaluate_and_save(model, dataloader, device, output_csv, use_tta=False):
             labels = labels.numpy()
 
             for path, label, score in zip(paths, labels, outputs):
-                all_data.append((Path(path).name, int(label.item()), float(score.item())))
+                all_data.append(
+                    (Path(path).name, int(label.item()), float(score.item()))
+                )
 
     # Save to CSV
     with open(output_csv, "w", newline="") as f:
@@ -92,12 +110,12 @@ def bootstrap_evaluation(
     prefix="bootstrap",
 ):
     df = pd.read_csv(csv_path)
-    
+
     # Check if the CSV file is empty or has no data
     if df.empty:
         print("Warning: No data found in the CSV file. Skipping bootstrap evaluation.")
         return None
-    
+
     results = []
 
     neoplasia = df[df["label"] == 1]
@@ -105,7 +123,7 @@ def bootstrap_evaluation(
 
     # Check if we have enough samples for bootstrap
     if len(neoplasia) == 0 or len(ndbe) == 0:
-        print(f"Warning: Insufficient data for bootstrap evaluation.")
+        print("Warning: Insufficient data for bootstrap evaluation.")
         print(f"Found {len(neoplasia)} neoplasia samples and {len(ndbe)} ndbe samples.")
         print("Skipping bootstrap evaluation.")
         return None
@@ -113,12 +131,16 @@ def bootstrap_evaluation(
     # Adjust sample sizes based on available data
     actual_min_neoplasia = min(min_neoplasia, len(neoplasia))
     actual_ndbe_size = min(min_neoplasia * ndbe_multiplier, len(ndbe))
-    
+
     if actual_min_neoplasia == 0 or actual_ndbe_size == 0:
-        print("Warning: Cannot perform bootstrap with zero samples in one or both classes.")
+        print(
+            "Warning: Cannot perform bootstrap with zero samples in one or both classes."
+        )
         return None
 
-    print(f"Performing bootstrap with {actual_min_neoplasia} neoplasia samples and {actual_ndbe_size} ndbe samples per iteration.")
+    print(
+        f"Performing bootstrap with {actual_min_neoplasia} neoplasia samples and {actual_ndbe_size} ndbe samples per iteration."
+    )
 
     for _ in range(n_bootstrap):
         neoplasia_sample = neoplasia.sample(n=actual_min_neoplasia, replace=True)
@@ -229,9 +251,7 @@ if __name__ == "__main__":
         type=str,
         help="Path to the model checkpoint",
     )
-    parser.add_argument(
-        "--model", type=str, help="Model name"
-    )
+    parser.add_argument("--model", type=str, help="Model name")
     parser.add_argument(
         "--batch_size", type=int, default=1, help="Batch size for evaluation"
     )

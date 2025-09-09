@@ -2,7 +2,6 @@ import os
 import csv
 import random
 import argparse
-import subprocess
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
@@ -34,21 +33,27 @@ def evaluate_validation_split(model, dataloader, device, output_csv):
     """
     model.eval()
     all_data = []
-    
+
     with torch.no_grad():
-        for batch_idx, (images, labels) in enumerate(tqdm(dataloader, desc="Evaluating", unit="batch")):
+        for batch_idx, (images, labels) in enumerate(
+            tqdm(dataloader, desc="Evaluating", unit="batch")
+        ):
             images = images.to(device)
             outputs = model(images)
             predictions = torch.sigmoid(outputs).cpu().numpy()
-            
+
             labels = labels.numpy()
-            
+
             # Generate synthetic filenames for validation samples
             for sample_idx, (label, score) in enumerate(zip(labels, predictions)):
                 # Create synthetic filename: val_batch{batch_idx}_sample{sample_idx}.png
-                synthetic_filename = f"val_batch{batch_idx:03d}_sample{sample_idx:03d}.png"
-                all_data.append((synthetic_filename, int(label.item()), float(score.item())))
-    
+                synthetic_filename = (
+                    f"val_batch{batch_idx:03d}_sample{sample_idx:03d}.png"
+                )
+                all_data.append(
+                    (synthetic_filename, int(label.item()), float(score.item()))
+                )
+
     # Save to CSV
     with open(output_csv, "w", newline="") as f:
         writer = csv.writer(f)
@@ -70,8 +75,10 @@ def _load_external_pretrained(model, ckpt_path, device, drop_head=True):
     for k, v in state.items():
         nk = k
         if nk.startswith("module."):
-            nk = nk[len("module."):]
-        if drop_head and ("fc." in nk or ".classifier" in nk or nk.startswith("classifier")):
+            nk = nk[len("module.") :]
+        if drop_head and (
+            "fc." in nk or ".classifier" in nk or nk.startswith("classifier")
+        ):
             continue
         new_state[nk] = v
     msg = model.load_state_dict(new_state, strict=False)
@@ -202,7 +209,9 @@ def main(args):
 
     # === Initialize dataset and dataloaders ===
     print("loading data from: ", os.path.join(args.data_path, "train"))
-    dataset = RareDataset(os.path.join(args.data_path, "train"), input_size=args.input_size)
+    dataset = RareDataset(
+        os.path.join(args.data_path, "train"), input_size=args.input_size
+    )
 
     train_dataset, val_dataset = split_dataset(dataset, args.val_split, seed=42)
 
@@ -302,7 +311,10 @@ def main(args):
     head_params = _get_head_params_set(model)
     backbone_params = [p for p in model.parameters() if p not in head_params]
     param_groups = [
-        {"params": backbone_params, "lr": args.lr_backbone if args.lr_backbone else args.lr},
+        {
+            "params": backbone_params,
+            "lr": args.lr_backbone if args.lr_backbone else args.lr,
+        },
         {"params": list(head_params), "lr": args.lr_head if args.lr_head else args.lr},
     ]
     optimizer = optim.Adam(param_groups, lr=args.lr)
@@ -339,13 +351,13 @@ def main(args):
     save_metric_key = metric_key_map.get(args.save_metric.lower(), args.save_metric)
     better_is_lower = save_metric_key == "Loss"
     best_metric_value = float("inf") if better_is_lower else float("-inf")
-    
+
     # Early stopping parameters
-    patience = args.patience if hasattr(args, 'patience') else 10
-    min_delta = args.min_delta if hasattr(args, 'min_delta') else 0.001
+    patience = args.patience if hasattr(args, "patience") else 10
+    min_delta = args.min_delta if hasattr(args, "min_delta") else 0.001
     patience_counter = 0
     best_epoch = 0
-    
+
     # Optionally freeze backbone for warmup epochs
     head_params = _get_head_params_set(model)
     if args.freeze_backbone_epochs and args.freeze_backbone_epochs > 0:
@@ -383,25 +395,35 @@ def main(args):
 
         current = val_metrics.get(save_metric_key, None)
         if current is None:
-            print(f"Warning: save_metric '{save_metric_key}' not found in metrics; skipping checkpointing.")
+            print(
+                f"Warning: save_metric '{save_metric_key}' not found in metrics; skipping checkpointing."
+            )
         else:
-            is_better = current < best_metric_value if better_is_lower else current > best_metric_value
+            is_better = (
+                current < best_metric_value
+                if better_is_lower
+                else current > best_metric_value
+            )
             if is_better:
                 # Check if improvement is significant enough
                 if better_is_lower:
                     improvement = best_metric_value - current
                 else:
                     improvement = current - best_metric_value
-                
+
                 if improvement >= min_delta:
                     best_metric_value = current
                     best_epoch = epoch + 1
                     patience_counter = 0
                     torch.save(model.state_dict(), args.save_model)
-                    print(f"Model saved at epoch {epoch + 1} (improvement: {improvement:.6f})")
+                    print(
+                        f"Model saved at epoch {epoch + 1} (improvement: {improvement:.6f})"
+                    )
                 else:
                     patience_counter += 1
-                    print(f"No significant improvement (delta: {improvement:.6f} < {min_delta})")
+                    print(
+                        f"No significant improvement (delta: {improvement:.6f} < {min_delta})"
+                    )
             else:
                 patience_counter += 1
                 print(f"No improvement. Patience: {patience_counter}/{patience}")
@@ -409,11 +431,13 @@ def main(args):
         print(
             f"Epoch {epoch + 1}/{args.epochs} - Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, Val Metrics: {val_metrics}"
         )
-        
+
         # Early stopping check
         if patience_counter >= patience:
             print(f"\nEarly stopping triggered! No improvement for {patience} epochs.")
-            print(f"Best {save_metric_key}: {best_metric_value:.6f} at epoch {best_epoch}")
+            print(
+                f"Best {save_metric_key}: {best_metric_value:.6f} at epoch {best_epoch}"
+            )
             break
 
     if args.use_wandb:
@@ -421,21 +445,29 @@ def main(args):
 
     # Evaluate the trained model on validation data
     print("Evaluating model on validation data...")
-    
+
     # Use separate test set if provided, otherwise use validation split
     if args.eval_data_path and os.path.exists(args.eval_data_path):
         print(f"Using separate test set: {args.eval_data_path}")
-        test_dataset = RareTestSet(args.eval_data_path, return_paths=True, input_size=args.input_size)
-        eval_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+        test_dataset = RareTestSet(
+            args.eval_data_path, return_paths=True, input_size=args.input_size
+        )
+        eval_loader = DataLoader(
+            test_dataset, batch_size=args.batch_size, shuffle=False
+        )
         # Use the standard evaluation function for test sets with paths
-        evaluate_and_save(model, eval_loader, device, str(output_dir / "evaluation_metrics.csv"))
+        evaluate_and_save(
+            model, eval_loader, device, str(output_dir / "evaluation_metrics.csv")
+        )
     else:
         print("Using validation split for evaluation (no separate test set provided)")
         # Create a custom evaluation for validation dataset without paths
-        evaluate_validation_split(model, val_loader, device, str(output_dir / "evaluation_metrics.csv"))
-    
+        evaluate_validation_split(
+            model, val_loader, device, str(output_dir / "evaluation_metrics.csv")
+        )
+
     print(f"Predictions saved to: {output_dir / 'evaluation_metrics.csv'}")
-    
+
     # Perform bootstrap evaluation
     summary = bootstrap_evaluation(
         str(output_dir / "evaluation_metrics.csv"),

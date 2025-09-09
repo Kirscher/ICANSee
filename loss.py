@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=0.25, gamma=2.0, reduction='mean'):
+    def __init__(self, alpha=0.25, gamma=2.0, reduction="mean"):
         """
         Binary Focal Loss with optional per-class alpha.
 
@@ -37,11 +38,11 @@ class FocalLoss(nn.Module):
         alpha_t = self.alpha_pos * targets + self.alpha_neg * (1.0 - targets)
 
         # BCE with logits per-sample
-        bce = F.binary_cross_entropy_with_logits(logits, targets, reduction='none')
+        bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
         loss = alpha_t * (1.0 - p_t).pow(self.gamma) * bce
 
-        if self.reduction == 'mean':
+        if self.reduction == "mean":
             return loss.mean()
-        if self.reduction == 'sum':
+        if self.reduction == "sum":
             return loss.sum()
         return loss
