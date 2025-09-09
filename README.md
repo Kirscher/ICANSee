@@ -4,6 +4,12 @@
   <img src="resources/icansee.png" alt="ICANSee Logo" style="width:50%; max-width:100px; display:block; margin: 0 auto;">
 </p>
 
+<p align="center">
+  <a href="https://github.com/Kirscher/ICANSee/actions/workflows/python-app.yml">
+    <img src="https://github.com/Kirscher/ICANSee/actions/workflows/python-app.yml/badge.svg?branch=main" alt="Python app">
+  </a>
+</p>
+
 ### Enhanced Neoplasia Detection in Endoscopic Images with Domain-Specific Pretraining and Focal Loss for Severe Class Imbalance
 
 ICANSee is a simple set of improvements over the original [**RARE Challenge**](https://rare25.grand-challenge.org/) baseline to reduce data leakage, prevent overfitting, and improve recall in a highly imbalanced setting.
