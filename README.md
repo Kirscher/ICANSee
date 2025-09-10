@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/Kirscher/ICANSee/actions/workflows/python-app.yml">
-    <img src="https://github.com/Kirscher/ICANSee/actions/workflows/python-app.yml/badge.svg?branch=main" alt="Python app">
+    <img src="https://github.com/Kirscher/ICANSee/actions/workflows/python-app.yml/badge.svg?branch=master" alt="Python app">
   </a>
 </p>
 
