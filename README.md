@@ -15,7 +15,7 @@
 ICANSee is a simple set of improvements over the original [**RARE Challenge**](https://rare25.grand-challenge.org/) baseline to reduce data leakage, prevent overfitting, and improve recall in a highly imbalanced setting.
 
 ### What changed
-- Correct evaluation protocol: no evaluation on the training split; validation-only by default, with optional separate test set via `--eval_data_path`.
+- Evaluation protocol: validation-only by default, with optional separate test set via `--eval_data_path`.
 - Early stopping: stops training when the chosen validation metric stops improving (patience/min_delta configurable).
 - Sensitivity-focused training option: allow saving the best checkpoint by `Sensitivity` when recall is the priority.
 - Focal loss tuning: support for `focal_alpha`/`focal_gamma` to bias towards the positive (neoplasia) class.
@@ -36,9 +36,6 @@ env PYTHONPATH=. python3 train.py \
   --patience 8 --min_delta 0.001
 ```
 
-### Notes
-- To avoid data leakage, ICANSee evaluates on the validation split by default. Provide `--eval_data_path` to evaluate on a separate set.
-- Early stopping parameters can be tuned with `--patience` and `--min_delta`.
 ---
 
 ### Focal loss
